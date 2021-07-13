@@ -27,10 +27,6 @@ let authors = [
 ];
 
 /*
- * Suomi:
- * Saattaisi olla järkevämpää assosioida kirja ja sen tekijä tallettamalla kirjan yhteyteen tekijän nimen sijaan tekijän id
- * Yksinkertaisuuden vuoksi tallennamme kuitenkin kirjan yhteyteen tekijän nimen
- *
  * English:
  * It might make more sense to associate a book with its author by storing the author's name in the context of the book instead of the author's id
  * However, for simplicity, we will store the author's name in connection with the book
@@ -90,11 +86,16 @@ let books = [
 
 const typeDefs = gql`
   type Query {
+    bookCount: Int!
+    authorCount: Int!
   }
 `;
 
 const resolvers = {
-  Query: {},
+  Query: {
+    bookCount: () => books.length,
+    authorCount: () => authors.length,
+  },
 };
 
 const server = new ApolloServer({
