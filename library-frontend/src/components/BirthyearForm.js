@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { EDIT_AUTHOR } from '../queries';
+import PropTypes from 'prop-types';
 
-const BirthyearForm = () => {
+const BirthyearForm = ({ authors }) => {
   const [name, setName] = useState('');
   const [born, setBorn] = useState('');
 
@@ -21,16 +22,21 @@ const BirthyearForm = () => {
     <div>
       <h2>Set birthyear</h2>
       <form onSubmit={submit}>
-        <div>
-          name
-          <input
-            id="name"
-            name="name"
-            value={name}
-            type="text"
-            onChange={({ target }) => setName(target.value)}
-          />
-        </div>
+        <select
+          id="authors"
+          name="authors"
+          value={name}
+          onChange={({ target }) => setName(target.value)}
+        >
+          <option value="" disabled>
+            Choose an author...
+          </option>
+          {authors.map((author) => (
+            <option key={author.id} value={author.name}>
+              {author.name}
+            </option>
+          ))}
+        </select>
         <div>
           born
           <input
@@ -45,6 +51,10 @@ const BirthyearForm = () => {
       </form>
     </div>
   );
+};
+
+BirthyearForm.propTypes = {
+  authors: PropTypes.array.isRequired,
 };
 
 export default BirthyearForm;
