@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
+import PropTypes from 'prop-types';
 import { ALL_AUTHORS, ALL_BOOKS, CREATE_BOOK } from '../queries';
 
-const NewBook = ({ show }) => {
+const NewBook = ({ show, setPage }) => {
   const [title, setTitle] = useState('');
   const [author, setAuhtor] = useState('');
   const [published, setPublished] = useState('');
@@ -29,6 +30,7 @@ const NewBook = ({ show }) => {
     setAuhtor('');
     setGenres([]);
     setGenre('');
+    setPage('books');
   };
 
   const addGenre = () => {
@@ -75,6 +77,11 @@ const NewBook = ({ show }) => {
       </form>
     </div>
   );
+};
+
+NewBook.propTypes = {
+  show: PropTypes.bool.isRequired,
+  setPage: PropTypes.func.isRequired,
 };
 
 export default NewBook;
