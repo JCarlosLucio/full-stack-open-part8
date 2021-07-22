@@ -1,27 +1,26 @@
-import { useApolloClient, useQuery } from '@apollo/client';
-import { ALL_BOOKS, ME } from '../queries';
+import { useQuery } from '@apollo/client';
+import { BOOKS_BY_GENRE, ME } from '../queries';
 import PropTypes from 'prop-types';
 
 const Recommendations = ({ show }) => {
-  const client = useApolloClient();
-
   const { loading, data } = useQuery(ME);
+
+  const { loading: loadingBooks, data: dataBooks } = useQuery(BOOKS_BY_GENRE, {
+    variables: { genre: data && data.me.favoriteGenre },
+    skip: !data,
+  });
 
   if (!show) {
     return null;
   }
 
-  if (loading) {
+  if (loading || loadingBooks) {
     return <div>loading...</div>;
   }
 
-  const books = client.readQuery({ query: ALL_BOOKS }).allBooks;
-
   const favoriteGenre = data.me.favoriteGenre;
 
-  const recommended = books.filter((book) =>
-    book.genres.includes(favoriteGenre)
-  );
+  const recommended = dataBooks.allBooks;
 
   return (
     <div>
