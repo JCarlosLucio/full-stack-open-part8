@@ -1,15 +1,9 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import PropTypes from 'prop-types';
-import {
-  ALL_AUTHORS,
-  ALL_BOOKS,
-  BOOKS_BY_GENRE,
-  CREATE_BOOK,
-  ME,
-} from '../queries';
+import { CREATE_BOOK } from '../queries';
 
-const NewBook = ({ show, setPage }) => {
+const NewBook = ({ show, setPage, updateCacheWith }) => {
   const [title, setTitle] = useState('');
   const [author, setAuhtor] = useState('');
   const [published, setPublished] = useState('');
@@ -18,45 +12,7 @@ const NewBook = ({ show, setPage }) => {
 
   const [createBook] = useMutation(CREATE_BOOK, {
     update: (store, response) => {
-      const authorsInStore = store.readQuery({ query: ALL_AUTHORS });
-      const booksInStore = store.readQuery({ query: ALL_BOOKS });
-      const meInStore = store.readQuery({ query: ME });
-      const booksByGenreInStore = store.readQuery({
-        query: BOOKS_BY_GENRE,
-        variables: { genre: meInStore.me.favoriteGenre },
-      });
-
-      // update bookCount of author
-      store.writeQuery({
-        query: ALL_AUTHORS,
-        data: {
-          ...authorsInStore,
-          allAuthors: authorsInStore.allAuthors.map((a) =>
-            a.name === author ? { ...a, bookCount: a.bookCount + 1 } : a
-          ),
-        },
-      });
-
-      // update books list with addedBook
-      store.writeQuery({
-        query: ALL_BOOKS,
-        data: {
-          ...booksInStore,
-          allBooks: [...booksInStore.allBooks, response.data.addBook],
-        },
-      });
-
-      // update recommended book list if book is from favorite genre
-      if (genres.includes(meInStore.me.favoriteGenre)) {
-        store.writeQuery({
-          query: BOOKS_BY_GENRE,
-          variables: { genre: meInStore.me.favoriteGenre },
-          data: {
-            ...booksByGenreInStore,
-            allBooks: [...booksByGenreInStore.allBooks, response.data.addBook],
-          },
-        });
-      }
+      updateCacheWith(response.data.addBook);
     },
   });
 
@@ -128,6 +84,7 @@ const NewBook = ({ show, setPage }) => {
 NewBook.propTypes = {
   show: PropTypes.bool.isRequired,
   setPage: PropTypes.func.isRequired,
+  updateCacheWith: PropTypes.func.isRequired,
 };
 
 export default NewBook;
