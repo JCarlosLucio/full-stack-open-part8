@@ -6,7 +6,13 @@ import LoginForm from './components/LoginForm';
 import Recommendations from './components/Recommendations';
 import storage from './utils/storage';
 import { useApolloClient, useSubscription } from '@apollo/client';
-import { ALL_BOOKS, BOOK_ADDED, BOOKS_BY_GENRE, ME } from './queries';
+import {
+  ALL_AUTHORS,
+  ALL_BOOKS,
+  BOOK_ADDED,
+  BOOKS_BY_GENRE,
+  ME,
+} from './queries';
 
 const App = () => {
   const [page, setPage] = useState('authors');
@@ -17,43 +23,53 @@ const App = () => {
     const includedIn = (set, object) =>
       set.map((p) => p.id).includes(object.id);
     const booksInStore = client.readQuery({ query: ALL_BOOKS });
+    const authorsInStore = client.readQuery({ query: ALL_AUTHORS });
 
-    // update book list with addedBook
     if (!includedIn(booksInStore.allBooks, addedBook)) {
+      // update book list with addedBook
       client.writeQuery({
         query: ALL_BOOKS,
         data: { allBooks: [...booksInStore.allBooks, addedBook] },
       });
-    }
 
-    // TODO - update bookCount of author
-
-    // update recommended book list if book is from favorite genre
-    if (token) {
-      const meInStore = client.readQuery({ query: ME });
-      const booksByGenreInStore = client.readQuery({
-        query: BOOKS_BY_GENRE,
-        variables: { genre: meInStore.me.favoriteGenre },
+      // update bookCount of author
+      client.writeQuery({
+        query: ALL_AUTHORS,
+        data: {
+          allAuthors: includedIn(authorsInStore.allAuthors, addedBook.author)
+            ? authorsInStore.allAuthors.map((a) =>
+                a.name === addedBook.author.name
+                  ? { ...a, bookCount: a.bookCount + 1 }
+                  : a
+              )
+            : [...authorsInStore.allAuthors, addedBook.author],
+        },
       });
 
-      if (
-        addedBook.genres.includes(meInStore.me.favoriteGenre) &&
-        !includedIn(booksByGenreInStore.allBooks, addedBook)
-      ) {
-        client.writeQuery({
-          query: BOOKS_BY_GENRE,
-          variables: { genre: meInStore.me.favoriteGenre },
-          data: {
-            allBooks: [...booksByGenreInStore.allBooks, addedBook],
-          },
-        });
+      // update recommended book list if book is from favorite genre
+      if (token) {
+        const meInStore = client.readQuery({ query: ME });
+
+        if (addedBook.genres.includes(meInStore.me.favoriteGenre)) {
+          const booksByGenreInStore = client.readQuery({
+            query: BOOKS_BY_GENRE,
+            variables: { genre: meInStore.me.favoriteGenre },
+          });
+
+          client.writeQuery({
+            query: BOOKS_BY_GENRE,
+            variables: { genre: meInStore.me.favoriteGenre },
+            data: {
+              allBooks: [...booksByGenreInStore.allBooks, addedBook],
+            },
+          });
+        }
       }
     }
   };
 
   useSubscription(BOOK_ADDED, {
     onSubscriptionData: ({ subscriptionData }) => {
-      console.log(subscriptionData);
       const addedBook = subscriptionData.data.bookAdded;
       window.alert(`${addedBook.title} added`);
       updateCacheWith(addedBook);

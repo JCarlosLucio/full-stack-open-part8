@@ -6,7 +6,7 @@ const typeDefs = `
   type Author {
     name: String!
     born: Int
-    bookCount: Int
+    bookCount: Int!
     id: ID!
   }
 
@@ -41,11 +41,6 @@ const resolvers = {
       }
 
       return author;
-    },
-  },
-  Author: {
-    bookCount: (root) => {
-      return Book.collection.countDocuments({ author: root._id });
     },
   },
 };

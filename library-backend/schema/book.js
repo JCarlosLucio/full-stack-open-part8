@@ -57,7 +57,12 @@ const resolvers = {
       }
 
       try {
-        let author = await Author.findOne({ name: args.author });
+        let author = await Author.findOneAndUpdate(
+          { name: args.author },
+          { $inc: { bookCount: 1 } },
+          { new: true }
+        );
+
         if (!author) {
           author = new Author({ name: args.author });
           await author.save();
